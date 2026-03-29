@@ -1,12 +1,11 @@
-import com.android.build.OutputFile
 import org.apache.tools.ant.taskdefs.condition.Os
-
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-apply plugin: 'com.android.application'
-
-apply plugin: 'kotlin-android'
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
 
 def getCurrentFlavor() {
     String task = getGradle().getStartParameter().getTaskRequests().toString()
@@ -18,18 +17,40 @@ def getCurrentFlavor() {
 }
 
 android {
-    buildToolsVersion "33.0.0"
-    compileSdkVersion 33
+    namespace 'com.github.shadowsocks.plugin.kcptun'
+    compileSdk 34
+
     defaultConfig {
         applicationId "com.github.shadowsocks.plugin.kcptun"
-        minSdkVersion rootProject.minSdkVersion
-        targetSdkVersion 33
+        minSdk rootProject.minSdkVersion
+        targetSdk 34
         versionCode 1000200
         versionName "1.0.2"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    signingConfigs {
+        release {
+            def props = new Properties()
+            def propFile = file('../keystore.properties')
+            if (propFile.exists()) {
+                props.load(new FileInputStream(propFile))
+                storeFile = file(props['storeFile'])
+                storePassword = props['storePassword']
+                keyAlias = props['keyAlias']
+                keyPassword = props['keyPassword']
+            }
+        }
     }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -41,12 +62,23 @@ android {
             universalApk true
         }
     }
-    sourceSets.main.jniLibs.srcDirs += new File(projectDir, "src/bin")
+    sourceSets {
+        main {
+            jniLibs.srcDirs += new File(projectDir, "src/bin")
+        }
+    }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 task goBuild(type: Exec) {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        println "Warning: Building on Windows is not supported"
+        workingDir 'src'
+        executable "powershell.exe"
+        args "-ExecutionPolicy", "Bypass", "-File", "make.ps1", rootProject.minSdkVersion
     } else {
         executable "sh"
         args "-c", "src/make.bash " + minSdkVersion
@@ -55,14 +87,16 @@ task goBuild(type: Exec) {
 
 task goClean(type: Exec) {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        println "Warning: Building on Windows is not supported"
+        workingDir 'src'
+        executable "powershell.exe"
+        args "-ExecutionPolicy", "Bypass", "-File", "clean.ps1"
     } else {
         executable "sh"
         args "-c", "src/clean.bash"
     }
 }
 
-tasks.whenTaskAdded { task ->
+tasks.configureEach { task ->
     if ((task.name == 'javaPreCompileDebug' ||
             task.name == 'javaPreCompileRelease')) {
         task.dependsOn(goBuild)
@@ -71,17 +105,17 @@ tasks.whenTaskAdded { task ->
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
     implementation 'com.github.shadowsocks:plugin:2.0.1'
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test:runner:1.4.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
 
 ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2, x86: 3, x86_64: 4]
 if (getCurrentFlavor() == 'release') android.applicationVariants.all { variant ->
     variant.outputs.each { output ->
-        def offset = project.ext.abiCodes.get(output.getFilter(OutputFile.ABI))
+        def offset = project.ext.abiCodes.get(output.getFilter(com.android.build.OutputFile.ABI))
         if (offset != null) output.versionCodeOverride = variant.versionCode + offset
     }
 }

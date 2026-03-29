@@ -1,11 +1,10 @@
 ## kcptun for Android
 
-[![CircleCI](https://circleci.com/gh/shadowsocks/kcptun-android.svg?style=svg)](https://circleci.com/gh/shadowsocks/kcptun-android)
-[![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21)
-[![Releases](https://img.shields.io/github/downloads/shadowsocks/kcptun-android/total.svg)](https://github.com/shadowsocks/kcptun-android/releases)
-[![Language: Kotlin](https://img.shields.io/github/languages/top/shadowsocks/kcptun-android.svg)](https://github.com/shadowsocks/kcptun-android/search?l=kotlin)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/46b34df6fe624ef9a46507126f407880)](https://www.codacy.com/app/shadowsocks/kcptun-android?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=shadowsocks/kcptun-android&amp;utm_campaign=Badge_Grade)
-[![License](https://img.shields.io/github/license/shadowsocks/kcptun-android.svg)](https://github.com/shadowsocks/kcptun-android/blob/master/LICENSE)
+[![CircleCI](https://circleci.com/gh/maxto3/kcptun-android.svg?style=svg)](https://circleci.com/gh/maxto3/kcptun-android)
+[![API](https://img.shields.io/badge/API-24%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=24)
+[![Releases](https://img.shields.io/github/downloads/maxto3/kcptun-android/total.svg)](https://github.com/maxto3/kcptun-android/releases)
+[![Language: Kotlin](https://img.shields.io/github/languages/top/maxto3/kcptun-android.svg)](https://github.com/maxto3/kcptun-android/search?l=kotlin)
+[![License](https://img.shields.io/github/license/maxto3/kcptun-android.svg)](https://github.com/maxto3/kcptun-android/blob/master/LICENSE)
 
 [kcptun](https://github.com/shadowsocks/kcptun) plugin for [shadowsocks-android](https://github.com/shadowsocks/shadowsocks-android).
 
@@ -13,19 +12,31 @@
 
 ### PREREQUISITES
 
-* JDK 1.8
-* Go 1.11+
+* JDK 17+
+* Go 1.25+
 * Android SDK
-  - Android NDK r19+
+  - Android NDK r25+
+* (Optional) Set environment variables or configure `local.properties`:
+  - `ANDROID_HOME` or `sdk.dir`: Path to Android SDK
+  - `ANDROID_NDK_HOME` or `ndk.dir`: Path to Android NDK
 
 ### BUILD
 
-You can check whether the latest commit builds under UNIX environment by checking CI status.
+You can check whether the latest commit builds by checking CI status.
 
-* Set environment variable `ANDROID_HOME` to `/path/to/android-sdk`
-* (optional) Set environment variable `ANDROID_NDK_HOME` to `/path/to/android-ndk` (default: `$ANDROID_HOME/ndk-bundle`)
+#### Linux/macOS (Traditional)
 * Clone the repo using `git clone --recurse-submodules <repo>` or update submodules using `git submodule update --init --recursive`
-* Build it using Android Studio or gradle script
+* Build using Android Studio or Gradle: `./gradlew assembleRelease`
+
+#### Windows (Native Support)
+* Clone the repo as above
+* Build using PowerShell-compatible Gradle wrapper: `./gradlew assembleRelease`
+* Native Go compilation is handled automatically via PowerShell scripts (`make.ps1` / `clean.ps1`)
+* Note: PowerShell execution policy may need adjustment. Use `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` if scripts are blocked.
+
+The project supports cross-platform builds with:
+- **Linux/macOS**: Bash scripts (`make.bash` / `clean.bash`)
+- **Windows**: PowerShell scripts (`make.ps1` / `clean.ps1`)
 
 ### TRANSLATE
 

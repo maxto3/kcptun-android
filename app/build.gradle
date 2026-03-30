@@ -19,6 +19,7 @@ def getCurrentFlavor() {
 android {
     namespace 'com.github.shadowsocks.plugin.kcptun'
     compileSdk 34
+    ndkVersion "30.0.14904198"
 
     defaultConfig {
         applicationId "com.github.shadowsocks.plugin.kcptun"

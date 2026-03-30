@@ -56,6 +56,10 @@ The project consists of two main components:
 - **Linux/macOS**: `app/src/clean.bash`
 - **Windows**: `powershell -ExecutionPolicy Bypass -File app/src/clean.ps1`
 
+#### Package Release Artifacts
+- **Linux/macOS**: `./release.sh <release_version>`
+- **Windows**: `powershell -ExecutionPolicy Bypass -File release.ps1 <release_version>`
+
 ### Platform-Specific Notes
 
 #### Linux/macOS (Traditional)
@@ -64,7 +68,7 @@ The project consists of two main components:
 - Compatible with existing CI/CD pipelines
 
 #### Windows (Native Support)
-- Uses PowerShell scripts (`make.ps1` / `clean.ps1`)
+- Uses PowerShell scripts (`make.ps1` / `clean.ps1` / `release.ps1`)
 - No WSL required for Go compilation
 - Integrates with Windows-based development environments
 - Automatically detects NDK toolchain paths

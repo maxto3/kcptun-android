@@ -6,7 +6,7 @@
 [![Language: Kotlin](https://img.shields.io/github/languages/top/maxto3/kcptun-android.svg)](https://github.com/maxto3/kcptun-android/search?l=kotlin)
 [![License](https://img.shields.io/github/license/maxto3/kcptun-android.svg)](https://github.com/maxto3/kcptun-android/blob/master/LICENSE)
 
-[kcptun](https://github.com/shadowsocks/kcptun) plugin for [shadowsocks-android](https://github.com/shadowsocks/shadowsocks-android).
+[kcptun](https://github.com/maxto3/kcptun) plugin for [shadowsocks-android](https://github.com/shadowsocks/shadowsocks-android).
 
 <a href="https://play.google.com/store/apps/details?id=com.github.shadowsocks.plugin.kcptun"><img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" height="48"></a>
 
@@ -45,7 +45,7 @@ This plugin is an official plugin thus you can see [shadowsocks-android](https:/
 ## OPEN SOURCE LICENSES
 
 <ul>
-    <li>kcptun: <a href="https://github.com/shadowsocks/kcptun/blob/shadowsocks/LICENSE.md">MIT</a></li>
+    <li>kcptun: <a href="https://github.com/maxto3/kcptun/blob/shadowsocks/LICENSE.md">MIT</a></li>
 </ul>
 
 ### LICENSE

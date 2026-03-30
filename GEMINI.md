@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project is a maintained fork of the original `shadowsocks/kcptun-android` repository, now hosted at `maxto3/kcptun-android`. It serves as an official [kcptun](https://github.com/shadowsocks/kcptun) plugin for [shadowsocks-android](https://github.com/shadowsocks/shadowsocks-android), wrapping the `kcptun` Go client into an Android application package (APK) that provides KCP tunneling capabilities.
+This project is a maintained fork of the original `shadowsocks/kcptun-android` repository, now hosted at `maxto3/kcptun-android`. It serves as an official [kcptun](https://github.com/maxto3/kcptun) plugin for [shadowsocks-android](https://github.com/shadowsocks/shadowsocks-android), wrapping the `kcptun` Go client into an Android application package (APK) that provides KCP tunneling capabilities.
 
 ## Key Updates in This Fork
 
@@ -106,6 +106,6 @@ This fork maintains compatibility with the upstream `shadowsocks/kcptun-android`
 ## Acknowledgments
 
 - Original project: `shadowsocks/kcptun-android`
-- kcptun core: `shadowsocks/kcptun`
+- kcptun core: [maxto3/kcptun](https://github.com/maxto3/kcptun) (Maintained Fork)
 - Shadowsocks Android: `shadowsocks/shadowsocks-android`
 - Contributors to this fork for modernization efforts

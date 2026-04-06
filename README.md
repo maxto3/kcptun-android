@@ -16,9 +16,48 @@
 * Go 1.25+
 * Android SDK
   - Android NDK r25+
-* (Optional) Set environment variables or configure `local.properties`:
-  - `ANDROID_HOME` or `sdk.dir`: Path to Android SDK
-  - `ANDROID_NDK_HOME` or `ndk.dir`: Path to Android NDK
+
+### QUICK START
+
+We provide automated setup scripts to configure your Android SDK/NDK paths:
+
+#### Windows
+```powershell
+# Run the setup script (recommended)
+.\setup-env.ps1
+
+# Or with force flag to overwrite existing configuration
+.\setup-env.ps1 -Force
+
+# Show help
+.\setup-env.ps1 -Help
+```
+
+#### Linux/macOS
+```bash
+# Make the script executable
+chmod +x setup-env.sh
+
+# Run the setup script (recommended)
+./setup-env.sh
+
+# Or with force flag to overwrite existing configuration
+./setup-env.sh --force
+
+# Show help
+./setup-env.sh --help
+```
+
+#### Manual Configuration (Alternative)
+If you prefer manual setup, you can:
+1. Create or edit `local.properties` file in the project root:
+   ```
+   sdk.dir=/path/to/your/android/sdk
+   ndk.dir=/path/to/your/android/ndk  # optional
+   ```
+2. Or set environment variables:
+   - `ANDROID_HOME` or `ANDROID_SDK_ROOT`: Path to Android SDK
+   - `ANDROID_NDK_HOME`: Path to Android NDK (optional)
 
 ### BUILD
 
@@ -26,10 +65,12 @@ You can check whether the latest commit builds by checking CI status.
 
 #### Linux/macOS (Traditional)
 * Clone the repo using `git clone --recurse-submodules <repo>` or update submodules using `git submodule update --init --recursive`
+* Run the setup script: `./setup-env.sh`
 * Build using Android Studio or Gradle: `./gradlew assembleRelease`
 
 #### Windows (Native Support)
 * Clone the repo as above
+* Run the setup script: `.\setup-env.ps1`
 * Build using PowerShell-compatible Gradle wrapper: `./gradlew assembleRelease`
 * Native Go compilation is handled automatically via PowerShell scripts (`make.ps1` / `clean.ps1`)
 * Note: PowerShell execution policy may need adjustment. Use `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` if scripts are blocked.
@@ -37,6 +78,15 @@ You can check whether the latest commit builds by checking CI status.
 The project supports cross-platform builds with:
 - **Linux/macOS**: Bash scripts (`make.bash` / `clean.bash`)
 - **Windows**: PowerShell scripts (`make.ps1` / `clean.ps1`)
+
+### TROUBLESHOOTING
+
+If you encounter "SDK not found" errors:
+1. Run the appropriate setup script for your platform (see Quick Start above)
+2. Ensure Android Studio or the standalone Android SDK is installed
+3. Verify the SDK path contains the `platforms` and `tools` directories
+
+The build system will provide helpful error messages with platform-specific guidance if SDK configuration is missing.
 
 ### TRANSLATE
 

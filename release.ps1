@@ -6,7 +6,7 @@ if (-not $release)
     exit 1
 }
 
-$apkDir = "app/build/outputs/apk/release"
+$apkDir = "app/release"
 
 Copy-Item "$apkDir/app-armeabi-v7a-release.apk" "kcptun-armeabi-v7a-$release.apk"
 Copy-Item "$apkDir/app-arm64-v8a-release.apk" "kcptun-arm64-v8a-$release.apk"

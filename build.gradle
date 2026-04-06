@@ -1,5 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+import org.gradle.api.GradleException
+import java.nio.file.Paths
+
 buildscript {
     ext {
         kotlinVersion = '1.9.20'
@@ -15,10 +18,117 @@ buildscript {
     }
 }
 
+// Helper function to validate Android SDK path
+def validateAndroidSdkPath(sdkPath) {
+    if (!sdkPath) {
+        return false
+    }
+    
+    def sdkDir = new File(sdkPath)
+    if (!sdkDir.exists() || !sdkDir.isDirectory()) {
+        return false
+    }
+    
+    // Check for common SDK directories
+    def platformsDir = new File(sdkDir, "platforms")
+    def toolsDir = new File(sdkDir, "tools")
+    def platformToolsDir = new File(sdkDir, "platform-tools")
+    
+    return platformsDir.exists() || toolsDir.exists() || platformToolsDir.exists()
+}
+
+// Helper function to provide helpful error message when SDK is not found
+def provideSdkNotFoundHelp() {
+    def os = System.getProperty("os.name").toLowerCase()
+    def isWindows = os.contains("windows")
+    def isMac = os.contains("mac")
+    def isLinux = os.contains("linux")
+    
+    def message = "\n" + "=" * 80 + "\n"
+    message += "ANDROID SDK NOT FOUND\n"
+    message += "=" * 80 + "\n\n"
+    
+    message += "The Android SDK path could not be determined. Please configure it using one of these methods:\n\n"
+    
+    message += "1. RECOMMENDED: Run the setup script:\n"
+    if (isWindows) {
+        message += "   PowerShell: .\\setup-env.ps1\n"
+    } else {
+        message += "   Bash: ./setup-env.sh\n"
+    }
+    message += "   This will automatically detect and configure your Android SDK/NDK.\n\n"
+    
+    message += "2. Create or edit 'local.properties' file in the project root with:\n"
+    message += "   sdk.dir=/path/to/your/android/sdk\n"
+    message += "   ndk.dir=/path/to/your/android/ndk  (optional)\n\n"
+    
+    message += "3. Set environment variables:\n"
+    message += "   - ANDROID_HOME or ANDROID_SDK_ROOT: Path to Android SDK\n"
+    message += "   - ANDROID_NDK_HOME: Path to Android NDK (optional)\n\n"
+    
+    message += "Common SDK locations:\n"
+    if (isWindows) {
+        message += "   - %LOCALAPPDATA%\\Android\\Sdk\n"
+        message += "   - C:\\Android\\Sdk\n"
+        message += "   - %ProgramFiles%\\Android\\Android Studio\\Sdk\n"
+    } else if (isMac) {
+        message += "   - ~/Library/Android/sdk\n"
+        message += "   - /Applications/Android Studio.app/Contents/sdk\n"
+    } else if (isLinux) {
+        message += "   - ~/Android/Sdk\n"
+        message += "   - /opt/android/sdk\n"
+        message += "   - /usr/lib/android-sdk\n"
+    }
+    
+    message += "\nFor more information, visit: https://developer.android.com/studio\n"
+    message += "=" * 80 + "\n"
+    
+    return message
+}
+
+// Check for Android SDK configuration at the beginning of the build
+gradle.projectsLoaded {
+    // Check if local.properties exists
+    def localProperties = new File(rootProject.projectDir, "local.properties")
+    def hasLocalProperties = localProperties.exists()
+    
+    // Check environment variables
+    def envSdkPath = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+    def hasEnvSdk = false
+    if (envSdkPath) {
+        hasEnvSdk = validateAndroidSdkPath(envSdkPath)
+    }
+    
+    // If neither local.properties nor valid environment variable is found, show help
+    if (!hasLocalProperties && !hasEnvSdk) {
+        println(provideSdkNotFoundHelp())
+        
+        // Don't fail immediately, let Gradle try to build and fail with its own error
+        // This allows users to see the helpful message before the build fails
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+                kotlinOptions {
+                    jvmTarget = '17'
+                }
+                compileSdk 34
+            }
+        }
     }
 }
 

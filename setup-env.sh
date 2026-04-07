@@ -109,6 +109,47 @@ find_android_sdk() {
     return 1
 }
 
+find_java_home() {
+    # Common Java/JBR installation paths on Linux/macOS
+    local possible_paths=()
+    
+    # Environment variable
+    if [[ -n "$JAVA_HOME" ]]; then
+        possible_paths+=("$JAVA_HOME")
+    fi
+    
+    # Android Studio JBR (JetBrains Runtime) - priority
+    # Linux
+    possible_paths+=("$HOME/android-studio/jbr")
+    possible_paths+=("/opt/android-studio/jbr")
+    possible_paths+=("/usr/local/android-studio/jbr")
+    # macOS
+    possible_paths+=("/Applications/Android Studio.app/Contents/jbr")
+    possible_paths+=("$HOME/Applications/Android Studio.app/Contents/jbr")
+    
+    # Common JDK paths
+    possible_paths+=("/usr/lib/jvm/default-java")
+    possible_paths+=("/usr/lib/jvm/java-17-openjdk-amd64")
+    possible_paths+=("/usr/lib/jvm/java-11-openjdk-amd64")
+    
+    for path in "${possible_paths[@]}"; do
+        if [[ -n "$path" && -d "$path" ]]; then
+            local resolved_path
+            resolved_path=$(realpath "$path" 2>/dev/null || echo "$path")
+            
+            # If it's a directory containing bin/java, it's likely a valid JAVA_HOME
+            if [[ -x "$resolved_path/bin/java" ]]; then
+                write_info "Found Java/JBR at: $resolved_path"
+                write_success "Valid Java environment confirmed"
+                echo "$resolved_path"
+                return 0
+            fi
+        fi
+    done
+    
+    return 1
+}
+
 find_android_ndk() {
     local sdk_path="$1"
     local possible_paths=()
@@ -179,7 +220,6 @@ find_android_ndk() {
 
 create_local_properties() {
     local sdk_path="$1"
-    local ndk_path="$2"
     local local_props_path="local.properties"
     
     if [[ -f "$local_props_path" && $FORCE -eq 0 ]]; then
@@ -195,25 +235,13 @@ create_local_properties() {
     
     if [[ -n "$sdk_path" ]]; then
         # Convert path to Gradle-friendly format
-        # For Java properties files, backslashes need to be escaped as \\
-        # On Linux/macOS, paths use forward slashes, but we handle backslashes just in case
         local gradle_sdk_path
         gradle_sdk_path=$(echo "$sdk_path" | sed 's/\\/\\/g')
         content+="sdk.dir=$gradle_sdk_path"
     fi
     
-    if [[ -n "$ndk_path" ]]; then
-        if [[ -n "$content" ]]; then
-            content+=$'\n'
-        fi
-        # Convert path to Gradle-friendly format
-        local gradle_ndk_path
-        gradle_ndk_path=$(echo "$ndk_path" | sed 's/\\/\\/g')
-        content+="ndk.dir=$gradle_ndk_path"
-    fi
-    
     if [[ -z "$content" ]]; then
-        write_error "No SDK or NDK paths to write"
+        write_error "No SDK paths to write"
         return 1
     fi
     
@@ -257,7 +285,19 @@ if [[ -z "$sdk_path" ]]; then
     exit 1
 fi
 
-# Find Android NDK
+# Find Java/JBR
+write_info "Searching for Java/JBR..."
+java_home=$(find_java_home || true)
+
+if [[ -n "$java_home" ]]; then
+    export JAVA_HOME="$java_home"
+    write_success "JAVA_HOME set to: $JAVA_HOME"
+else
+    write_warning "Could not find Java/JBR automatically."
+    echo "Gradle might fail if JAVA_HOME is not set."
+fi
+
+# Find Android NDK (Keep for verification, though not written to local.properties anymore)
 write_info "Searching for Android NDK..."
 ndk_path=$(find_android_ndk "$sdk_path" || true)
 
@@ -277,9 +317,15 @@ fi
 
 # Create local.properties
 write_info "Creating local.properties file..."
-if create_local_properties "$sdk_path" "$ndk_path"; then
+if create_local_properties "$sdk_path"; then
     echo ""
     write_success "Setup completed successfully!"
+    echo ""
+    if [[ -z "$java_home" ]]; then
+        write_warning "Reminder: You may need to set JAVA_HOME manually before running gradlew."
+    else
+        write_info "Note: Run 'source ./setup-env.sh' to apply JAVA_HOME to your current shell."
+    fi
     echo ""
     echo "Next steps:"
     echo "  1. Run: ./gradlew assembleDebug"

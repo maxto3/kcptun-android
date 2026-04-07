@@ -83,6 +83,60 @@ function Find-AndroidSdk {
     return $null
 }
 
+function Find-JavaHome {
+    # Common Java/JBR installation paths on Windows
+    $possiblePaths = @()
+    
+    # Environment variable
+    if ($env:JAVA_HOME) { $possiblePaths += $env:JAVA_HOME }
+    
+    # Android Studio JBR (JetBrains Runtime) - priority
+    $asPaths = @(
+        "$env:ProgramFiles\Android\Android Studio\jbr",
+        "$env:LOCALAPPDATA\Android\Android Studio\jbr",
+        "C:\Program Files\Android\Android Studio\jbr"
+    )
+    
+    foreach ($asPath in $asPaths) {
+        if (Test-Path $asPath) { $possiblePaths += $asPath }
+    }
+    
+    # Common JDK paths
+    $possiblePaths += "$env:ProgramFiles\Java"
+    $possiblePaths += "C:\Java"
+    
+    foreach ($path in $possiblePaths) {
+        if ($path -and (Test-Path $path)) {
+            try {
+                $resolvedPath = (Resolve-Path $path -ErrorAction SilentlyContinue).Path
+                if (-not $resolvedPath) { continue }
+                $resolvedPath = $resolvedPath.TrimEnd('\')
+                
+                # If it's a directory containing bin\java.exe, it's likely a valid JAVA_HOME
+                if (Test-Path (Join-Path $resolvedPath "bin\java.exe")) {
+                    Write-Info "Found Java/JBR at: $resolvedPath"
+                    Write-Success "Valid Java environment confirmed"
+                    return $resolvedPath
+                }
+                
+                # If it's a parent Java directory, look for subdirectories like jdk-* or jbr
+                $subDirs = Get-ChildItem -Path $resolvedPath -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending
+                foreach ($subDir in $subDirs) {
+                    if (Test-Path (Join-Path $subDir.FullName "bin\java.exe")) {
+                        Write-Info "Found Java/JBR at: $($subDir.FullName)"
+                        Write-Success "Valid Java environment confirmed"
+                        return $subDir.FullName
+                    }
+                }
+            } catch {
+                # Ignore errors for specific paths
+            }
+        }
+    }
+    
+    return $null
+}
+
 function Find-AndroidNdk {
     param([string]$SdkPath)
     
@@ -145,8 +199,7 @@ function Find-AndroidNdk {
 
 function Create-LocalProperties {
     param(
-        [string]$SdkPath,
-        [string]$NdkPath
+        [string]$SdkPath
     )
     
     $localPropsPath = "local.properties"
@@ -170,14 +223,8 @@ function Create-LocalProperties {
         $content += "sdk.dir=$gradleSdkPath"
     }
     
-    if ($NdkPath) {
-        # Convert path to Gradle-friendly format
-        $gradleNdkPath = $NdkPath -replace '\\', '\\'
-        $content += "ndk.dir=$gradleNdkPath"
-    }
-    
     if ($content.Count -eq 0) {
-        Write-Error "No SDK or NDK paths to write"
+        Write-Error "No SDK paths to write"
         return $false
     }
     
@@ -219,7 +266,19 @@ if (-not $sdkPath) {
     exit 1
 }
 
-# Find Android NDK
+# Find Java/JBR
+Write-Info "Searching for Java/JBR..."
+$javaHome = Find-JavaHome
+
+if ($javaHome) {
+    $env:JAVA_HOME = $javaHome
+    Write-Success "JAVA_HOME set to: $javaHome"
+} else {
+    Write-Warning "Could not find Java/JBR automatically."
+    Write-Host "Gradle might fail if JAVA_HOME is not set."
+}
+
+# Find Android NDK (Keep for verification, though not written to local.properties anymore)
 Write-Info "Searching for Android NDK..."
 $ndkPath = Find-AndroidNdk -SdkPath $sdkPath
 
@@ -239,12 +298,15 @@ if (-not $ndkPath) {
 
 # Create local.properties
 Write-Info "Creating local.properties file..."
-$success = Create-LocalProperties -SdkPath $sdkPath -NdkPath $ndkPath
+$success = Create-LocalProperties -SdkPath $sdkPath
 
 if ($success) {
     Write-Host ""
     Write-Success "Setup completed successfully!"
     Write-Host ""
+    if (-not $javaHome) {
+        Write-Warning "Reminder: You may need to set JAVA_HOME manually before running gradlew."
+    }
     Write-Host "Next steps:"
     Write-Host "  1. Run: .\gradlew assembleDebug"
     Write-Host "  2. If you move your SDK/NDK, run this script again"
